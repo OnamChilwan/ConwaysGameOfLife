@@ -1,198 +1,87 @@
 ﻿namespace Game.UnitTests
 {
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
 
+    using Game.Collections;
+    using Game.Objects;
     using NUnit.Framework;
 
     public class WorldTests
     {
         [TestFixture]
-        public class Given_I_Have_An_Empty_World
+        public class Given_I_Have_One_Living_Cell
         {
             private World world;
 
             [SetUp]
-            public void When_Creating_Multiple_Living_Cells()
+            public void When_Creating_Next_Generation()
             {
-                var livingCell = new Cell();
-                var position = new Position();
+                var cells = new Cells();
+                cells.Create(new Cell(new Position(2, 2)));
 
-                this.world = new World();
-                this.world
-                    .Generations
-                    .CreateGeneration();
-
-                for (int i = 1; i <= 5; i++)
-                {
-                    //livingCell.SetPosition(position);
-                    //position.SetX(5 + i);
-                    //position.SetY(5);
-
-                    this.world
-                        .GetCurrentGeneration()
-                        .Cells
-                        .Animate();
-                }
+                this.world = new World(cells);
+                this.world.NextGeneration();
             }
 
             [Test]
-            public void Then_A_Generation_Has_Been_Created()
+            public void Then_The_Cell_Dies_Of_Solitude()
             {
-                Assert.That(this.world.Generations.GetNumberOfGenerationsCreated(), Is.EqualTo(1));
+                Assert.That(this.world.GetPopulation().Count(), Is.EqualTo(0));
+            }
+        }
+
+        [TestFixture]
+        public class Given_A_Cell_Has_Four_Neighbours
+        {
+            private World world;
+
+            [SetUp]
+            public void When_Creating_Next_Generation()
+            {
+                var cells = new Cells();
+                cells.Create(new Cell(new Position(2, 2)));
+                cells.Create(new Cell(new Position(1, 1)));
+                cells.Create(new Cell(new Position(2, 1)));
+                cells.Create(new Cell(new Position(3, 1)));
+                cells.Create(new Cell(new Position(1, 2)));
+
+                this.world = new World(cells);
+                this.world.NextGeneration();
             }
 
             [Test]
-            public void Then_The_World_Is_Populated_With_A_Living_Cell()
+            public void Then_The_Cell_Dies_Due_To_Over_Population()
             {
-                Assert.That(this.world.GetCurrentGeneration().Cells.GetPopulation(), Is.EqualTo(5));
-            }
-        }
-    }
-
-
-
-
-
-    public class World
-    {
-        public World()
-        {
-            this.Generations = new Generations();
-        }
-
-        public Generations Generations { get; private set; }
-
-        public Generation GetCurrentGeneration()
-        {
-            return this.Generations.Last();
-        }
-    }
-
-    public class Generation
-    {
-        public Generation()
-        {
-            this.Cells = new Cells();
-        }
-
-        public Cells Cells { get; }
-    }
-
-    public class Generations : IEnumerable<Generation>
-    {
-        private List<Generation> generations;
-
-        public Generations()
-        {
-            this.generations = new List<Generation>();
-        }
-
-        public void CreateGeneration()
-        {
-            this.generations.Add(new Generation());
-        }
-
-        public int GetNumberOfGenerationsCreated()
-        {
-            return this.generations.Count;
-        }
-
-        public Generation this[int index] => this.generations[index];
-
-        IEnumerator<Generation> IEnumerable<Generation>.GetEnumerator()
-        {
-            return this.generations.GetEnumerator();
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return this.generations.GetEnumerator();
-        }
-    }
-
-    public class Cell
-    {
-        public void SetPosition(Position position)
-        {
-            this.Position = position;
-        }
-
-        public Position Position { get; private set; }
-    }
-
-    public class Cells : IEnumerable
-    {
-        private readonly List<Cell> cells = new List<Cell>();
-
-        public void Animate()
-        {
-            foreach (var cell in this.cells)
-            {
-                if (this.HasNeighbour(cell))
-                {
-                    
-                }
+                Assert.That(this.world.GetPopulation().Where(x => x.IsDead()).ToList(), Has.Count.EqualTo(1));
             }
         }
 
-        private Cell GetNeighbours()
-        {
-            //yield return 
-        }
+        //[TestFixture]
+        //public class Given_A_Cell_Has_Two_Neighbours
+        //{
+        //    private World world;
 
-        private bool HasNeighbour(Cell cell)
-        {
-            //4,3
-            //X Y
-            //5,3
-            //5,4
-            //5,2
-            //4,4
-            //4,2
-            //3,4
-            //3,3
-            //3,2
-            var result = this.cells.Any(x => 
-                (x.Position.X == cell.Position.X - 1) &&
-                (x.Position.X == cell.Position.X - 1));
+        //    [SetUp]
+        //    public void When_Creating_Next_Generation()
+        //    {
+        //        var cells = new Cells();
+        //        cells.Create(new Cell());
+        //        cells.Create(new Cell());
+        //        cells.Create(new Cell());
 
-            // 1234567
-            //1*******
-            //2*******
-            //3***C***
-            //4*******
-            //5*******
-            //6*******
-            //7*******
-        }
+        //        cells[0].SetPosition(new Position(2, 3));
+        //        cells[1].SetPosition(new Position(1, 3));
+        //        cells[2].SetPosition(new Position(3, 3));
 
-        public int GetPopulation()
-        {
-            return this.cells.Count;
-        }
+        //        this.world = new World(cells);
+        //        this.world.Animate();
+        //    }
 
-        public IEnumerator GetEnumerator()
-        {
-            return this.cells.GetEnumerator();
-        }
-    }
-
-    public class Position
-    {
-        public void SetX(int x)
-        {
-            this.X = x;
-        }
-
-        public void SetY(int y)
-        {
-            this.Y = y;
-        }
-
-        public int X { get; private set; }
-
-        public int Y { get; private set; }
+        //    [Test]
+        //    public void Then_The_Cell_Dies_Due_To_Over_Population()
+        //    {
+        //        Assert.That(this.world.GetCurrentGeneration().Cells.Count(), Is.EqualTo(4));
+        //    }
+        //}
     }
 }
